@@ -1,5 +1,7 @@
 package docxtemplateexpander;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -9,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 
 public class DocxProcessorTest {
 	private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
@@ -29,8 +32,10 @@ public class DocxProcessorTest {
 
 	@Test(expected=IllegalStateException.class)
 	public void testComplainsIfTemplateIsNotReadable() throws IOException {
-		DocxProcessor dp = new DocxProcessor(testTemplate);
-		testTemplate.setReadable(false);
+		File unreadable = File.createTempFile(this.getClass().getSimpleName(), ".docx");
+		Files.copy(testTemplate, unreadable);
+		DocxProcessor dp = new DocxProcessor(unreadable);
+		unreadable.setReadable(false);
 		dp.process(EMPTY_MAP, resultDocxPath);
 	}
 
@@ -51,6 +56,13 @@ public class DocxProcessorTest {
 		DocxProcessor dp = new DocxProcessor(testTemplate);
 		resultDocxPath.setWritable(false);
 		dp.process(EMPTY_MAP, resultDocxPath);
+	}
+
+	@Test
+	public void testCanCopyAFile() throws IOException {
+		DocxProcessor dp = new DocxProcessor(testTemplate);
+		dp.process(EMPTY_MAP, resultDocxPath);
+		assertTrue(Files.equal(resultDocxPath, testTemplate));
 	}
 
 }
