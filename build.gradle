@@ -1,0 +1,26 @@
+group = 'docx'
+version = '0.1'
+description = 'Template expander'
+
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "com.google.guava:guava:18.0"
+
+    compile group: 'org.apache.poi', name: 'poi', version:'3.12'
+    compile group: 'org.apache.poi', name: 'poi-scratchpad', version:'3.12'
+    compile(group: 'org.apache.poi', name: 'poi-ooxml', version:'3.12') {
+        exclude(module: 'stax-api')
+        exclude(module: 'xml-apis')
+    }
+    testCompile group: 'junit', name: 'junit', version:'4.11'
+    testCompile group: 'org.mockito', name: 'mockito-core', version:'1.7'
+}
+
