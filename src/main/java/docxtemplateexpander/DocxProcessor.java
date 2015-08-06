@@ -16,6 +16,10 @@ public final class DocxProcessor {
 	}
 
 	public void process(Map<String, String> substitutionMap, File resultDocxPath) {
+		Preconditions.checkNotNull(substitutionMap);
+		Preconditions.checkNotNull(resultDocxPath);
+		Preconditions.checkArgument(resultDocxPath.canWrite());
+
 		Preconditions.checkState(template.canRead());
 	}
 

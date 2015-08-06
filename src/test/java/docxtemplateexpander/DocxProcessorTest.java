@@ -34,4 +34,23 @@ public class DocxProcessorTest {
 		dp.process(EMPTY_MAP, resultDocxPath);
 	}
 
+	@Test(expected=NullPointerException.class)
+	public void testComplainsIfDestinationIsNull() throws IOException {
+		DocxProcessor dp = new DocxProcessor(testTemplate);
+		dp.process(EMPTY_MAP, null);
+	}
+
+	@Test(expected=NullPointerException.class)
+	public void testComplainsIfMapIsNull() throws IOException {
+		DocxProcessor dp = new DocxProcessor(testTemplate);
+		dp.process(null, resultDocxPath);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testComplainsIfDestinationIsNotWritable() throws IOException {
+		DocxProcessor dp = new DocxProcessor(testTemplate);
+		resultDocxPath.setWritable(false);
+		dp.process(EMPTY_MAP, resultDocxPath);
+	}
+
 }
