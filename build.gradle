@@ -21,6 +21,7 @@ dependencies {
         exclude(module: 'xml-apis')
     }
     testCompile group: 'junit', name: 'junit', version:'4.11'
+    testCompile group: 'commons-io', name: 'commons-io', version:'2.4'
     testCompile group: 'org.mockito', name: 'mockito-core', version:'1.7'
 }
 

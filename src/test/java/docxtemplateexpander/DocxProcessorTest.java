@@ -1,6 +1,6 @@
 package docxtemplateexpander;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,11 +12,6 @@ import java.util.regex.Pattern;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFFootnote;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -24,6 +19,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+
+import zipcomparator.ZipComparator;
 
 public class DocxProcessorTest {
 	private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
@@ -35,6 +32,7 @@ public class DocxProcessorTest {
 	@BeforeClass
 	public static void preparePristineCopy() throws InvalidFormatException, IOException {
 		tempFolder = java.nio.file.Files.createTempDirectory(DocxProcessorTest.class.getSimpleName()).toFile();
+//		System.out.println(tempFolder.toString());
 		URL url = DocxProcessorTest.class.getResource("/template.docx");
 		testTemplate = new File(url.getFile());
 		testTemplate.setWritable(false);
@@ -102,7 +100,7 @@ public class DocxProcessorTest {
 		resultDocx = new File(tempFolder, "./processedWithougSubstitutions.docx");
 		resultDocx.createNewFile();
 		dp.process(EMPTY_MAP, resultDocx);
-		assertTrue(Files.equal(resultDocx, templateEquivalent));
+		assertTrue(ZipComparator.equal(resultDocx, templateEquivalent));
 	}
 
 	@Test
@@ -117,6 +115,7 @@ public class DocxProcessorTest {
 		resultDocx = new File(tempFolder, "./processed_1.docx");
 		resultDocx.createNewFile();
 		dp.process(map, resultDocx);
+		assertFalse(ZipComparator.equal(resultDocx, templateEquivalent));
 	}
 
 }
