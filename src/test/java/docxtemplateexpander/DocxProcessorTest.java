@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -16,6 +17,7 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,19 +27,20 @@ import com.google.common.io.Files;
 
 public class DocxProcessorTest {
 	private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
-	static File testTemplate;
-	static File templateEquivalent;
-	File resultDocx;
+	private static File tempFolder;
+	private static File testTemplate;
+	private static File templateEquivalent;
+	private File resultDocx;
 	
 	@BeforeClass
 	public static void preparePristineCopy() throws InvalidFormatException, IOException {
+		tempFolder = java.nio.file.Files.createTempDirectory(DocxProcessorTest.class.getSimpleName()).toFile();
 		URL url = DocxProcessorTest.class.getResource("/template.docx");
 		testTemplate = new File(url.getFile());
 		testTemplate.setWritable(false);
         XWPFDocument doc = new XWPFDocument(OPCPackage.open(testTemplate));
         
-//        templateEquivalent = File.createTempFile(DocxProcessorTest.class.getSimpleName(), ".docx");
-        templateEquivalent = new File("./result.docx");
+        templateEquivalent = new File(tempFolder, "./templateEquivalent.docx");
         templateEquivalent.createNewFile();
 		
         try (FileOutputStream out = new FileOutputStream(templateEquivalent)) {
@@ -49,7 +52,14 @@ public class DocxProcessorTest {
 	
 	@Before
 	public void setup() throws IOException {
-		resultDocx = File.createTempFile(this.getClass().getSimpleName(), ".docx");
+		resultDocx = new File(tempFolder, "./result.docx");
+		resultDocx.createNewFile();
+	}
+
+	@After
+	public void teardown() throws IOException {
+		resultDocx.setWritable(true);
+		resultDocx.delete();
 	}
 
 	@Test(expected=NullPointerException.class)
@@ -59,7 +69,8 @@ public class DocxProcessorTest {
 
 	@Test(expected=IllegalStateException.class)
 	public void testComplainsIfTemplateIsNotReadable() throws IOException, InvalidFormatException {
-		File unreadable = File.createTempFile(this.getClass().getSimpleName(), ".docx");
+		
+		File unreadable = new File(tempFolder, "./unreadableTemplate.docx");
 		Files.copy(testTemplate, unreadable);
 		DocxProcessor dp = new DocxProcessor(unreadable);
 		unreadable.setReadable(false);
@@ -88,7 +99,7 @@ public class DocxProcessorTest {
 	@Test
 	public void testCanCopyAFile() throws IOException, InvalidFormatException {
 		DocxProcessor dp = new DocxProcessor(testTemplate);
-		resultDocx = new File("./equiv.docx");
+		resultDocx = new File(tempFolder, "./processedWithougSubstitutions.docx");
 		resultDocx.createNewFile();
 		dp.process(EMPTY_MAP, resultDocx);
 		assertTrue(Files.equal(resultDocx, templateEquivalent));
@@ -103,7 +114,7 @@ public class DocxProcessorTest {
 				Pattern.quote("{{sub2}}"), "a_very_long_value: - The quick brown fox jumps over the lazy dog",
 				Pattern.quote("{{sub3}}"), "this\nis\na multiline\nvalue"
 				);
-		resultDocx = new File("./result.docx");
+		resultDocx = new File(tempFolder, "./processed_1.docx");
 		resultDocx.createNewFile();
 		dp.process(map, resultDocx);
 	}
