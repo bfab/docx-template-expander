@@ -24,28 +24,38 @@ import zipcomparator.ZipComparator;
 
 public class DocxProcessorTest {
 	private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
+	private static final File testTemplate = loadReadOnlyFromClasspath("/template.docx");
+	private static final File expected = loadReadOnlyFromClasspath("/expected.docx");
 	private static File tempFolder;
-	private static File testTemplate;
 	private static File templateEquivalent;
 	private File resultDocx;
 	
 	@BeforeClass
-	public static void preparePristineCopy() throws InvalidFormatException, IOException {
+	public static void prepareTempFolder() throws IOException {
 		tempFolder = java.nio.file.Files.createTempDirectory(DocxProcessorTest.class.getSimpleName()).toFile();
-//		System.out.println(tempFolder.toString());
-		URL url = DocxProcessorTest.class.getResource("/template.docx");
-		testTemplate = new File(url.getFile());
-		testTemplate.setWritable(false);
+		System.out.println(tempFolder.toString());
+	}
+	
+	@BeforeClass
+	public static void preparePristineCopy() throws InvalidFormatException, IOException {
         XWPFDocument doc = new XWPFDocument(OPCPackage.open(testTemplate));
         
         templateEquivalent = new File(tempFolder, "./templateEquivalent.docx");
         templateEquivalent.createNewFile();
-		
+				
         try (FileOutputStream out = new FileOutputStream(templateEquivalent)) {
         	doc.write(out);
         }
         
         templateEquivalent.setWritable(false);
+	}
+
+	private static File loadReadOnlyFromClasspath(String relPath) {
+		URL urlTemplate = DocxProcessorTest.class.getResource(relPath);
+		File f = new File(urlTemplate.getFile());
+		f.setWritable(false);
+		
+		return f;
 	}
 	
 	@Before
@@ -97,10 +107,10 @@ public class DocxProcessorTest {
 	@Test
 	public void testCanCopyAFile() throws IOException, InvalidFormatException {
 		DocxProcessor dp = new DocxProcessor(testTemplate);
-		resultDocx = new File(tempFolder, "./processedWithougSubstitutions.docx");
-		resultDocx.createNewFile();
-		dp.process(EMPTY_MAP, resultDocx);
-		assertTrue(ZipComparator.equal(resultDocx, templateEquivalent));
+		File target = new File(tempFolder, "./processedWithougSubstitutions.docx");
+		target.createNewFile();
+		dp.process(EMPTY_MAP, target);
+		assertTrue(ZipComparator.equal(target, templateEquivalent));
 	}
 
 	@Test
@@ -108,14 +118,15 @@ public class DocxProcessorTest {
 		DocxProcessor dp = new DocxProcessor(testTemplate);
 		
 		Map<String, String> map = ImmutableMap.of(
-				Pattern.quote("{{sub1}}"), "test value 1",
-				Pattern.quote("{{sub2}}"), "a_very_long_value: - The quick brown fox jumps over the lazy dog",
-				Pattern.quote("{{sub3}}"), "this\nis\na multiline\nvalue"
+				Pattern.quote("{{SUB1}}"), "test value 1",
+				Pattern.quote("{{SUB2}}"), "a_very_long_value: - The quick brown fox jumps over the lazy dog",
+				Pattern.quote("{{SUB3}}"), "this\nis\na multiline\nvalue",
+				Pattern.quote("{{SUB4}}"), ""
 				);
-		resultDocx = new File(tempFolder, "./processed_1.docx");
-		resultDocx.createNewFile();
-		dp.process(map, resultDocx);
-		assertFalse(ZipComparator.equal(resultDocx, templateEquivalent));
+		File target = new File(tempFolder, "./processed_1.docx");
+		target.createNewFile();
+		dp.process(map, target);
+		assertTrue(ZipComparator.equal(target, expected));
 	}
 
 }

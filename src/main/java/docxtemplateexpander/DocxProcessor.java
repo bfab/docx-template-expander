@@ -9,7 +9,10 @@ import java.util.Map.Entry;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFFooter;
 import org.apache.poi.xwpf.usermodel.XWPFFootnote;
+import org.apache.poi.xwpf.usermodel.XWPFHeader;
+import org.apache.poi.xwpf.usermodel.XWPFHeaderFooter;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -28,6 +31,18 @@ public final class DocxProcessor {
 		template = testTemplate;
 	}
 
+	/**
+	 * In the given map, keys are regexes whose matches will be replaced by their respective value.
+	 * 
+	 * Note: Key matches need to be ignored by the document grammar checking (having matches be upper-case without spaces is usually enough).
+	 * 
+	 * Note: comments are not processed (they're just copied over verbatim).
+	 * 
+	 * @param substitutionMap
+	 * @param resultDocx
+	 * @throws IOException
+	 * @throws InvalidFormatException
+	 */
 	public void process(Map<String, String> substitutionMap, File resultDocx) throws IOException, InvalidFormatException {
 		Preconditions.checkNotNull(substitutionMap);
 		Preconditions.checkNotNull(resultDocx);
@@ -46,11 +61,28 @@ public final class DocxProcessor {
         for (XWPFFootnote fNote : doc.getFootnotes())
 			processFootnote(substitutionMap, fNote);
         
+        for (XWPFHeader header : doc.getHeaderList()) {
+        	processHeaderFooter(substitutionMap, header);
+		}
+        
+        for (XWPFFooter footer : doc.getFooterList()) {
+        	processHeaderFooter(substitutionMap, footer);
+		}
+        
+        for (XWPFFootnote fNote : doc.getFootnotes())
+			processFootnote(substitutionMap, fNote);
+        
         try (FileOutputStream out = new FileOutputStream(resultDocx)) {
         	doc.write(out);
         }
 
     }
+
+	private static void processHeaderFooter(Map<String, String> substitutionMap, XWPFHeaderFooter hf) {
+		for (XWPFParagraph par : hf.getParagraphs()) {
+			processParagraph(substitutionMap, par);
+		}
+	}
 
 	private static void processFootnote(Map<String, String> substitutionMap, XWPFFootnote fNote) {
 		for (XWPFParagraph par : fNote.getParagraphs())
