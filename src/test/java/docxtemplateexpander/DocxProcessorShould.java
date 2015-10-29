@@ -1,6 +1,6 @@
 package docxtemplateexpander;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,7 +22,7 @@ import com.google.common.io.Files;
 import zipcomparator.ZipComparator;
 
 public class DocxProcessorShould {
-    private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
+    private static final Map<String, Substitution> EMPTY_MAP = ImmutableMap.of();
     private static final File testTemplate = loadReadOnlyFromClasspath("/template.docx");
     private static final File expected = loadReadOnlyFromClasspath("/expected.docx");
     private static final File tempFolder = prepareTempFolder();
@@ -132,15 +132,15 @@ public class DocxProcessorShould {
     public void process_a_file() throws IOException, InvalidFormatException {
         DocxProcessor dp = new DocxProcessor(testTemplate);
 
-        Map<String, String> map = ImmutableMap.of(
+        Map<String, Substitution> map = ImmutableMap.of(
                 Pattern.quote("{{SUB1}}"),
-                "test value 1",
+                new Substitution("test value 1"),
                 Pattern.quote("{{SUB2}}"),
-                "a_very_long_value: - The quick brown fox jumps over the lazy dog",
+                new Substitution("a_very_long_value: - The quick brown fox jumps over the lazy dog"),
                 Pattern.quote("{{SUB3}}"),
-                "this\nis\na multiline\nvalue",
+                new Substitution("this\nis\na multiline\nvalue"),
                 Pattern.quote("{{SUB4}}"),
-                "");
+                new Substitution(""));
         File target = new File(tempFolder, "./processed_1.docx");
         target.createNewFile();
         dp.process(map, target);

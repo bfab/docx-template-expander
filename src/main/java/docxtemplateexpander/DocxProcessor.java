@@ -43,7 +43,7 @@ public final class DocxProcessor {
 	 * @throws IOException
 	 * @throws InvalidFormatException
 	 */
-	public void process(Map<String, String> substitutionMap, File resultDocx) throws IOException, InvalidFormatException {
+	public void process(Map<String, Substitution> substitutionMap, File resultDocx) throws IOException, InvalidFormatException {
 		Preconditions.checkNotNull(substitutionMap);
 		Preconditions.checkNotNull(resultDocx);
 		Preconditions.checkArgument(resultDocx.canWrite());
@@ -78,30 +78,30 @@ public final class DocxProcessor {
 
     }
 
-	private static void processHeaderFooter(Map<String, String> substitutionMap, XWPFHeaderFooter hf) {
+	private static void processHeaderFooter(Map<String, Substitution> substitutionMap, XWPFHeaderFooter hf) {
 		for (XWPFParagraph par : hf.getParagraphs()) {
 			processParagraph(substitutionMap, par);
 		}
 	}
 
-	private static void processFootnote(Map<String, String> substitutionMap, XWPFFootnote fNote) {
+	private static void processFootnote(Map<String, Substitution> substitutionMap, XWPFFootnote fNote) {
 		for (XWPFParagraph par : fNote.getParagraphs())
 			processParagraph(substitutionMap, par);
 	}
 
-	private static void processTable(Map<String, String> substitutionMap, XWPFTable tbl) {
+	private static void processTable(Map<String, Substitution> substitutionMap, XWPFTable tbl) {
 		for (XWPFTableRow row : tbl.getRows())
 			for (XWPFTableCell cell : row.getTableCells())
 				for (XWPFParagraph p : cell.getParagraphs())
 					processParagraph(substitutionMap, p);
 	}
 
-	private static void processParagraph(Map<String, String> substitutionMap, XWPFParagraph par) {
+	private static void processParagraph(Map<String, Substitution> substitutionMap, XWPFParagraph par) {
 		for(XWPFRun run : par.getRuns()) {
 			for (int i=0; i< run.getCTR().sizeOfTArray(); ++i) {
 				String text = run.getText(i);
-				for (Entry<String, String> subst : substitutionMap.entrySet()) {
-					text = text.replaceAll(subst.getKey(), subst.getValue());
+				for (Entry<String, Substitution> subst : substitutionMap.entrySet()) {
+					text = text.replaceAll(subst.getKey(), subst.getValue().getValue());
 				}
 				run.setText(text, i);
 			}
