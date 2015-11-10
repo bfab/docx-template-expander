@@ -1,3 +1,7 @@
+version = '0.1'
+description = 'Template expander'
+
+
 buildscript {
     repositories {
         jcenter()
@@ -8,8 +12,6 @@ buildscript {
     }
 }
 
-version = '0.1'
-description = 'Template expander'
 
 apply plugin: 'maven'
 apply plugin: 'java'
@@ -28,6 +30,7 @@ repositories {
     jcenter()
     mavenCentral()
 }
+
 
 dependencies {
     compile "com.google.guava:guava:18.0"
