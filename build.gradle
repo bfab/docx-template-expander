@@ -1,13 +1,31 @@
-group = 'docx'
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.palantir:gradle-baseline-java:0.2.1'
+    }
+}
+
 version = '0.1'
 description = 'Template expander'
 
 apply plugin: 'maven'
 apply plugin: 'java'
-apply plugin: 'eclipse'
+
+// Apply for baselineUpdateConfig task
+apply plugin: 'com.palantir.baseline-config'
+
+// Apply plugins selectively depending on required functionality.
+//apply plugin: 'com.palantir.baseline-checkstyle'
+//apply plugin: 'com.palantir.baseline-findbugs'
+apply plugin: 'com.palantir.baseline-eclipse'
+//apply plugin: 'com.palantir.baseline-idea'
 
 
 repositories {
+    jcenter()
     mavenCentral()
 }
 
