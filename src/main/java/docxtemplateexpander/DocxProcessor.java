@@ -1,11 +1,12 @@
 package docxtemplateexpander;
 
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -19,25 +20,47 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
-import com.google.common.base.Preconditions;
-
 public final class DocxProcessor {
 
-	private final File template;
+    private interface OPCPackageProvider {
+        OPCPackage getPOCPackage() throws InvalidFormatException, IOException;
+    }
+
+	private final OPCPackageProvider opcPackageProvider;
 
 	public DocxProcessor(File testTemplate) {
 		Preconditions.checkNotNull(testTemplate);
-		
-		template = testTemplate;
+
+		opcPackageProvider = new OPCPackageProvider() {
+
+            @Override
+            public OPCPackage getPOCPackage() throws InvalidFormatException {
+                Preconditions.checkState(testTemplate.canRead());
+
+                return OPCPackage.open(testTemplate);
+            }
+        };
+	}
+
+	public DocxProcessor(InputStream is) {
+	    Preconditions.checkNotNull(is);
+
+        opcPackageProvider = new OPCPackageProvider() {
+
+            @Override
+            public OPCPackage getPOCPackage() throws InvalidFormatException, IOException {
+                return OPCPackage.open(is);
+            }
+        };
 	}
 
 	/**
 	 * In the given map, keys are regexes whose matches will be replaced by their respective value.
-	 * 
+	 *
 	 * Note: Key matches need to be ignored by the document grammar checking (having matches be upper-case without spaces is usually enough).
-	 * 
+	 *
 	 * Note: comments are not processed (they're just copied over verbatim).
-	 * 
+	 *
 	 * @param substitutionMap
 	 * @param resultDocx
 	 * @throws IOException
@@ -48,30 +71,27 @@ public final class DocxProcessor {
 		Preconditions.checkNotNull(resultDocx);
 		Preconditions.checkArgument(resultDocx.canWrite());
 
-		Preconditions.checkState(template.canRead());
-		
-        XWPFDocument doc = new XWPFDocument(OPCPackage.open(template));
+        XWPFDocument doc = new XWPFDocument(opcPackageProvider.getPOCPackage());
 
         for (XWPFParagraph par : doc.getParagraphs())
         	processParagraph(substitutionMap, par);
-        
         for (XWPFTable tbl : doc.getTables())
 			processTable(substitutionMap, tbl);
 
         for (XWPFFootnote fNote : doc.getFootnotes())
 			processFootnote(substitutionMap, fNote);
-        
+
         for (XWPFHeader header : doc.getHeaderList()) {
         	processHeaderFooter(substitutionMap, header);
 		}
-        
+
         for (XWPFFooter footer : doc.getFooterList()) {
         	processHeaderFooter(substitutionMap, footer);
 		}
-        
+
         for (XWPFFootnote fNote : doc.getFootnotes())
 			processFootnote(substitutionMap, fNote);
-        
+
         try (FileOutputStream out = new FileOutputStream(resultDocx)) {
         	doc.write(out);
         }

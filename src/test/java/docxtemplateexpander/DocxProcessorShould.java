@@ -2,23 +2,21 @@ package docxtemplateexpander;
 
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
-
 import zipcomparator.ZipComparator;
 
 public class DocxProcessorShould {
@@ -35,7 +33,7 @@ public class DocxProcessorShould {
             result = java.nio.file.Files.createTempDirectory(
                     DocxProcessorShould.class.getSimpleName()).toFile();
             System.out.println(result.toString());
-            
+
             return result;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -54,7 +52,7 @@ public class DocxProcessorShould {
             }
 
             copy.setWritable(false);
-            
+
             return copy;
         } catch (InvalidFormatException | IOException e) {
             throw new RuntimeException(e);
@@ -82,8 +80,13 @@ public class DocxProcessorShould {
     }
 
     @Test(expected = NullPointerException.class)
-    public void complain_if_template_is_null() {
-        new DocxProcessor(null);
+    public void complain_if_file_is_null() {
+        new DocxProcessor((File) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void complain_if_stream_is_null() {
+        new DocxProcessor((InputStream) null);
     }
 
     @Test(expected = IllegalStateException.class)
