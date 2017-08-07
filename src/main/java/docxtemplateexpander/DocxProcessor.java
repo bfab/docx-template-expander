@@ -28,7 +28,7 @@ public final class DocxProcessor {
 
 	private final OPCPackageProvider opcPackageProvider;
 
-	public DocxProcessor(File testTemplate) {
+	public DocxProcessor(final File testTemplate) {
 		Preconditions.checkNotNull(testTemplate);
 
 		opcPackageProvider = new OPCPackageProvider() {
@@ -42,7 +42,7 @@ public final class DocxProcessor {
         };
 	}
 
-	public DocxProcessor(InputStream is) {
+	public DocxProcessor(final InputStream is) {
 	    Preconditions.checkNotNull(is);
 
         opcPackageProvider = new OPCPackageProvider() {
@@ -92,8 +92,15 @@ public final class DocxProcessor {
         for (XWPFFootnote fNote : doc.getFootnotes())
 			processFootnote(substitutionMap, fNote);
 
-        try (FileOutputStream out = new FileOutputStream(resultDocx)) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(resultDocx);
         	doc.write(out);
+        } finally {
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
         }
 
     }
@@ -120,8 +127,10 @@ public final class DocxProcessor {
 		for(XWPFRun run : par.getRuns()) {
 			for (int i=0; i< run.getCTR().sizeOfTArray(); ++i) {
 				String text = run.getText(i);
-				for (Entry<String, Substitution> subst : substitutionMap.entrySet()) {
-					text = text.replaceAll(subst.getKey(), subst.getValue().getValue());
+				for (Entry<String, Substitution> subst : substitutionMap.entrySet()) { //TODO:remove println
+					String stringToReplace = subst.getKey();
+                    String stringToReplaceItWith = subst.getValue().getValue();
+                    text = text.replaceAll(stringToReplace, stringToReplaceItWith);
 				}
 				run.setText(text, i);
 			}

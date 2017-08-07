@@ -47,14 +47,23 @@ public class DocxProcessorShould {
             File copy = new File(tempFolder, "./templateEquivalent.docx");
             copy.createNewFile();
 
-            try (FileOutputStream out = new FileOutputStream(copy)) {
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(copy);
                 doc.write(out);
+            } finally {
+                if (out != null) {
+                    out.flush();
+                    out.close();
+                }
             }
 
             copy.setWritable(false);
 
             return copy;
-        } catch (InvalidFormatException | IOException e) {
+        } catch (InvalidFormatException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
